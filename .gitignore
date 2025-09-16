@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.env/
+
+# pipenv
+Pipfile.lock
+
+# IDEs
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
