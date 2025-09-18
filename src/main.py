@@ -1,16 +1,19 @@
-from inventory import Inventory, Product
+from .gui import App
+from .inventory import Inventory
 
 def main():
+    # Initialize the inventory
     inventory = Inventory()
-    inventory.load_from_csv("data/inventory.csv")
     
-    print("All products:")
-    for p in inventory.list_all_products():
-        print(f"{p.sku} | {p.name} | Qty: {p.quantity} | Supplier: {p.supplier_id}")
-    
-    print("\nLow stock products:")
-    for p in inventory.get_low_stock_products():
-        print(f"{p.sku} | {p.name} | Qty: {p.quantity}")
+    # Load initial data from the CSV file
+    try:
+        inventory.load_from_csv("data/inventory.csv")
+    except FileNotFoundError:
+        print("Initial inventory.csv not found, starting with empty inventory.")
+
+    # Launch the GUI application
+    app = App(inventory)
+    app.mainloop()
 
 if __name__ == "__main__":
     main()
