@@ -1,4 +1,4 @@
-import csv
+import pandas as pd
 import re
 from typing import List
 
@@ -41,25 +41,38 @@ class Inventory:
         self.products = {}  # sku -> Product
         self.suppliers = {}  # supplier_id -> Supplier
 
-    def load_from_csv(self, filepath: str):
-        with open(filepath, newline='') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                product = Product(
-                    sku=row["sku"],
-                    name=row["name"],
-                    quantity=int(row["quantity"]),
-                    supplier_id=row["supplier_id"]
-                )
-                self.products[product.sku] = product
+    def load_from_file(self, filepath: str):
+        self.products.clear()
+        
+        file_extension = filepath.split('.')[-1].lower()
+        if file_extension == 'csv':
+            df = pd.read_csv(filepath)
+        elif file_extension in ['xlsx', 'xls']:
+            df = pd.read_excel(filepath)
+        else:
+            raise ValueError("Unsupported file format. Please use .csv or .xlsx")
 
-    def save_to_csv(self, filepath: str):
-        with open(filepath, 'w', newline='') as csvfile:
-            fieldnames = ["sku", "name", "quantity", "supplier_id"]
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-            writer.writeheader()
-            for product in self.products.values():
-                writer.writerow(product.to_dict())
+        for index, row in df.iterrows():
+            product = Product(
+                sku=row["sku"],
+                name=row["name"],
+                quantity=int(row["quantity"]),
+                supplier_id=row["supplier_id"]
+            )
+            self.products[product.sku] = product
+
+    def save_to_file(self, filepath: str):
+        fieldnames = ["sku", "name", "quantity", "supplier_id"]
+        product_list = [p.to_dict() for p in self.products.values()]
+        df = pd.DataFrame(product_list, columns=fieldnames)
+        
+        file_extension = filepath.split('.')[-1].lower()
+        if file_extension == 'csv':
+            df.to_csv(filepath, index=False)
+        elif file_extension == 'xlsx':
+            df.to_excel(filepath, index=False)
+        else:
+            raise ValueError("Unsupported file format. Please save as .csv or .xlsx")
 
     def add_product(self, product: Product):
         if product.sku in self.products:

@@ -1,5 +1,6 @@
 import customtkinter as ctk
-from src.inventory import Inventory
+import tkinter.filedialog as filedialog
+#from src.inventory import Inventory
 
 class App(ctk.CTk):
 
@@ -8,28 +9,58 @@ class App(ctk.CTk):
 
     def adjust_stock_dialog(self):
         AdjustStockDialog(self, self.inventory, self.refresh_table)
-    
-    # Add these methods to your App class
 
     def show_low_stock(self):
-        # Clear existing rows but keep headers
         for widget in self.table_frame.winfo_children():
             if widget.grid_info()["row"] > 0:
                 widget.destroy()
 
         products = self.inventory.get_low_stock_products()
         for i, product in enumerate(products):
-            # Same code to populate a row as in refresh_table
             sku_label = ctk.CTkLabel(self.table_frame, text=product.sku)
             sku_label.grid(row=i+1, column=0, padx=10, pady=2)
-            # ... and so on for name, quantity, and supplier_id
             name_label = ctk.CTkLabel(self.table_frame, text=product.name)
             name_label.grid(row=i+1, column=1, padx=10, pady=2)
             quantity_label = ctk.CTkLabel(self.table_frame, text=str(product.quantity), text_color="red")
             quantity_label.grid(row=i+1, column=2, padx=10, pady=2)
             supplier_label = ctk.CTkLabel(self.table_frame, text=product.supplier_id)
             supplier_label.grid(row=i+1, column=3, padx=10, pady=2)
+        
+    def import_from_file(self):
+        file_path = filedialog.askopenfilename(
+            defaultextension=".csv",
+            filetypes=[("Spreadsheet Files", "*.csv *.xlsx")],
+            title="Select Inventory File"
+        )
+        if not file_path:
+            return
+            
+        try:
+            self.inventory.load_from_file(file_path)
+            self.refresh_table()
+            import tkinter.messagebox as messagebox
+            messagebox.showinfo("Success", "Inventory data imported successfully.")
+        except Exception as e:
+            import tkinter.messagebox as messagebox
+            messagebox.showerror("Error", f"Failed to import data: {e}")
 
+    def export_to_file(self):
+        file_path = filedialog.asksaveasfilename(
+            defaultextension=".csv",
+            filetypes=[("Spreadsheet Files", "*.csv *.xlsx")],
+            title="Save Inventory File"
+        )
+        if not file_path:
+            return
+            
+        try:
+            self.inventory.save_to_file(file_path)
+            import tkinter.messagebox as messagebox
+            messagebox.showinfo("Success", "Inventory data exported successfully.")
+        except Exception as e:
+            import tkinter.messagebox as messagebox
+            messagebox.showerror("Error", f"Failed to export data: {e}")
+    
     def reset_view(self):
         self.refresh_table()
 
@@ -45,6 +76,12 @@ class App(ctk.CTk):
         
         self.view_all_products_button = ctk.CTkButton(self.button_frame, text="View All Products", command=self.refresh_table)
         self.view_all_products_button.pack(side="left", padx=5, pady=5)
+        
+        self.import_button = ctk.CTkButton(self.button_frame, text="Open File", command=self.import_from_file)
+        self.import_button.pack(side="right", padx=5, pady=5)
+        
+        self.export_button = ctk.CTkButton(self.button_frame, text="Save File", command=self.export_to_file)
+        self.export_button.pack(side="right", padx=5, pady=5)
 
     # Call setup_buttons and table creation in __init__
     def __init__(self, inventory):
@@ -53,7 +90,7 @@ class App(ctk.CTk):
         self.inventory = inventory
 
         self.title("Simple Inventory System")
-        self.geometry("800x600")
+        self.geometry("1001x601")
 
         self.button_frame = ctk.CTkFrame(self)
         self.button_frame.pack(fill="x", padx=10, pady=5)
