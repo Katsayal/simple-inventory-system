@@ -9,6 +9,9 @@ class App(ctk.CTk):
 
     def adjust_stock_dialog(self):
         AdjustStockDialog(self, self.inventory, self.refresh_table)
+    
+    def delete_product_dialog(self):
+        DeleteProductDialog(self, self.inventory, self.refresh_table)
 
     def show_low_stock(self):
         for widget in self.table_frame.winfo_children():
@@ -65,11 +68,14 @@ class App(ctk.CTk):
         self.refresh_table()
 
     def setup_buttons(self):
-        self.add_button = ctk.CTkButton(self.button_frame, text="Add Product", command=self.add_product_dialog)
+        self.add_button = ctk.CTkButton(self.button_frame, text="Add Product", command=self.add_product_dialog, fg_color="green", hover_color="darkgreen")
         self.add_button.pack(side="left", padx=5, pady=5)
 
         self.adjust_stock_button = ctk.CTkButton(self.button_frame, text="Adjust Stock", command=self.adjust_stock_dialog)
         self.adjust_stock_button.pack(side="left", padx=5, pady=5)
+
+        self.delete_product_button = ctk.CTkButton(self.button_frame, text="Delete Product", command=self.delete_product_dialog, fg_color="red", hover_color="darkred")
+        self.delete_product_button.pack(side="left", padx=5, pady=5)
 
         self.low_stock_button = ctk.CTkButton(self.button_frame, text="View Low Stock", command=self.show_low_stock)
         self.low_stock_button.pack(side="left", padx=5, pady=5)
@@ -90,7 +96,7 @@ class App(ctk.CTk):
         self.inventory = inventory
 
         self.title("Simple Inventory System")
-        self.geometry("1001x601")
+        self.geometry("1111x601")
 
         self.button_frame = ctk.CTkFrame(self)
         self.button_frame.pack(fill="x", padx=10, pady=5)
@@ -236,6 +242,42 @@ class AdjustStockDialog(ctk.CTkToplevel):
         except ValueError as e:
             import tkinter.messagebox as messagebox
             messagebox.showerror("Input Error", f"Invalid input: {e}")
+        except Exception as e:
+            import tkinter.messagebox as messagebox
+            messagebox.showerror("Error", f"An unexpected error occurred: {e}")
+
+class DeleteProductDialog(ctk.CTkToplevel):
+    def __init__(self, master, inventory, callback):
+        super().__init__(master)
+        self.inventory = inventory
+        self.callback = callback
+
+        self.title("Delete Product")
+        self.geometry("300x150")
+
+        self.transient(master)
+        self.grab_set()
+
+        ctk.CTkLabel(self, text="SKU").pack(padx=10, pady=5)
+        self.sku_entry = ctk.CTkEntry(self)
+        self.sku_entry.pack(padx=10, pady=2)
+
+        ctk.CTkButton(self, text="Delete Product", command=self.delete_product).pack(padx=10, pady=10)
+
+    def delete_product(self):
+        try:
+            sku = self.sku_entry.get()
+
+            self.inventory.delete_product(sku)
+
+            self.destroy()
+            self.callback()
+
+            import tkinter.messagebox as messagebox
+            messagebox.showinfo("Success", f"Product with SKU '{sku}' deleted successfully.")
+        except KeyError as e:
+            import tkinter.messagebox as messagebox
+            messagebox.showerror("Error", f"Deletion failed: {e}")
         except Exception as e:
             import tkinter.messagebox as messagebox
             messagebox.showerror("Error", f"An unexpected error occurred: {e}")

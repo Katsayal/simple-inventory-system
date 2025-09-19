@@ -89,3 +89,8 @@ class Inventory:
 
     def list_all_products(self) -> List[Product]:
         return list(self.products.values())
+    
+    def delete_product(self, sku: str):
+        if sku not in self.products:
+            raise KeyError(f"No product with SKU {sku} to delete.")
+        del self.products[sku]
