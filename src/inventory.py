@@ -36,11 +36,40 @@ class Supplier:
 
 class Inventory:
     LOW_STOCK_THRESHOLD = 5
+    CRITICAL_STOCK_THRESHOLD = 2
 
     def __init__(self):
-        self.products = {}  # sku -> Product
-        self.suppliers = {}  # supplier_id -> Supplier
+        self.products = {}
+        self.suppliers = {}
+        self.history = []
+        self.history_index = -1
+        self._save_state()
+    
+    def _save_state(self):
+        if self.history_index + 1 < len(self.history):
+            self.history = self.history[:self.history_index + 1]
+        
+        # Save a deep copy of the current product state
+        import copy
+        self.history.append(copy.deepcopy(self.products))
+        self.history_index += 1
 
+    def undo(self):
+        """Reverts to the previous inventory state."""
+        if self.history_index > 0:
+            self.history_index -= 1
+            self.products = self.history[self.history_index]
+            return True
+        return False
+
+    def redo(self):
+        """Re-applies the next inventory state."""
+        if self.history_index < len(self.history) - 1:
+            self.history_index += 1
+            self.products = self.history[self.history_index]
+            return True
+        return False
+    
     def load_from_file(self, filepath: str):
         self.products.clear()
         
@@ -78,11 +107,13 @@ class Inventory:
         if product.sku in self.products:
             raise ValueError(f"Product with SKU {product.sku} already exists.")
         self.products[product.sku] = product
+        self._save_state()
 
     def adjust_product_stock(self, sku: str, amount: int):
         if sku not in self.products:
             raise KeyError(f"No product with SKU {sku}")
         self.products[sku].adjust_stock(amount)
+        self._save_state()
 
     def get_low_stock_products(self) -> List[Product]:
         return [p for p in self.products.values() if p.quantity <= self.LOW_STOCK_THRESHOLD]
@@ -94,3 +125,4 @@ class Inventory:
         if sku not in self.products:
             raise KeyError(f"No product with SKU {sku} to delete.")
         del self.products[sku]
+        self._save_state()
