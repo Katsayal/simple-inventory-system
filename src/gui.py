@@ -13,7 +13,7 @@ class App(ctk.CTk):
         self.sort_ascending = True
 
         self.title("Simple Inventory System")
-        self.geometry("1251x601")
+        self.geometry("1151x601")
 
         self.dashboard_frame = ctk.CTkFrame(self)
         self.dashboard_frame.pack(fill="x", padx=10, pady=5)
@@ -34,11 +34,6 @@ class App(ctk.CTk):
         self.create_product_table()
         self.refresh_table()
         
-        self.undo_button = ctk.CTkButton(self.button_frame, text="Undo", command=self.undo_action, width=50)
-        self.undo_button.pack(side="left", padx=5, pady=5)
-        self.redo_button = ctk.CTkButton(self.button_frame, text="Redo", command=self.redo_action, width=50)
-        self.redo_button.pack(side="left", padx=5, pady=5)
-
     def setup_icons(self):
         icon_path = "assets/"
         self.add_icon = ctk.CTkImage(Image.open(f"{icon_path}add_icon.png"), size=(20, 20))
@@ -188,18 +183,6 @@ class App(ctk.CTk):
         entry.bind("<Return>", save_and_refresh)
         entry.bind("<FocusOut>", save_and_refresh)
         
-    def undo_action(self):
-        if self.inventory.undo():
-            self.refresh_table()
-        else:
-            messagebox.showinfo("Undo", "Nothing to undo.")
-
-    def redo_action(self):
-        if self.inventory.redo():
-            self.refresh_table()
-        else:
-            messagebox.showinfo("Redo", "Nothing to redo.")
-
     def show_low_stock(self):
         low_stock_products = self.inventory.get_low_stock_products()
         self.refresh_table(products=low_stock_products)
